@@ -47,7 +47,7 @@ def extract_skills(input_text):
     filtered_tokens = [w for w in word_tokens if w not in stop_words]
 
     # remove the punctuation
-    filtered_tokens = [w for w in word_tokens if w.isalpha()]
+    filtered_tokens = [w for w in filtered_tokens if w.isalpha()]
 
     # generate bigrams and trigrams (such as artificial intelligence)
     bigrams_trigrams = list(map(' '.join, nltk.everygrams(filtered_tokens, 2, 3)))
