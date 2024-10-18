@@ -3,6 +3,9 @@ import docx2txt
 import re
 import subprocess
 import nltk
+import tkinter as tk
+from tkinter import filedialog
+from collections import Counter
 
 nltk.download('stopwords')
 nltk.download('punkt')
@@ -43,85 +46,85 @@ def extract_skills(input_text):
     stop_words = set(nltk.corpus.stopwords.words('english'))
     word_tokens = nltk.tokenize.word_tokenize(input_text)
 
-    # remove the stop words
+    # Remove the stop words
     filtered_tokens = [w for w in word_tokens if w not in stop_words]
 
-    # remove the punctuation
+    # Remove the punctuation
     filtered_tokens = [w for w in filtered_tokens if w.isalpha()]
 
-    # generate bigrams and trigrams (such as artificial intelligence)
+    # Generate bigrams and trigrams (e.g., "artificial intelligence")
     bigrams_trigrams = list(map(' '.join, nltk.everygrams(filtered_tokens, 2, 3)))
 
-    # we create a set to keep the results in.
+    # Create a set to keep the results
     found_skills = set()
 
-    # we search for each token in our skills database
+    # Search for each token in the skills database
     for token in filtered_tokens:
         if token.lower() in SKILLS_DB:
             found_skills.add(token)
 
-    # we search for each bigram and trigram in our skills database
+    # Search for each bigram and trigram in the skills database
     for ngram in bigrams_trigrams:
         if ngram.lower() in SKILLS_DB:
             found_skills.add(ngram)
 
     return found_skills
 
-def doc_to_text_catdoc(file_path):
-    try:
-        process = subprocess.Popen(
-            ['catdoc', '-w', file_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-        )
-    except (
-        FileNotFoundError,
-        ValueError,
-        subprocess.TimeoutExpired,
-        subprocess.SubprocessError,
-    ) as err:
-        return (None, str(err))
-    else:
-        stdout, stderr = process.communicate()
+def count_words(text):
+    # Tokenize the text
+    words = nltk.tokenize.word_tokenize(text)
+    # Count occurrences of each word (case insensitive)
+    word_count = Counter(word.lower() for word in words if word.isalpha())
+    return dict(word_count)
 
-    return (stdout.strip(), stderr.strip())
- 
-def extract_phone_number(resume_text):
-    phone = re.findall(PHONE_REG, resume_text)
- 
-    if phone:
-        number = ''.join(phone[0])
- 
-        if resume_text.find(number) >= 0 and len(number) <16:
-            return number
-    return None
- 
- 
-
-   
 def main(file_path):
     # Extract text from PDF or DOCX
-    if file_path.endswith('.pdf'):
-        text = extract_text_from_pdf(file_path)
-    elif file_path.endswith('.docx'):
-        text = extract_text_from_docx(file_path)
-    else:
-        print("Unsupported file type")
-        return
+    try:
+        if file_path.endswith('.pdf'):
+            text = extract_text_from_pdf(file_path)
+        elif file_path.endswith('.docx'):
+            text = extract_text_from_docx(file_path)
+        else:
+            print("Unsupported file type")
+            return
 
-    # Extract phone number from text
-    phone_number = extract_phone_number(text)
-    print(phone_number)
+        if text is None:
+            print("Failed to extract text from the file.")
+            return
 
-    # Extract emails from text
-    emails = extract_emails(text)
-    if emails:
-        print(emails[0])
+        # Extract phone number from text
+        phone_number = extract_phone_number(text)
+        print("Phone Number:", phone_number)
 
-    # Extract skills from text
-    skills = extract_skills(text)
-    print(skills)
+        # Extract emails from text
+        emails = extract_emails(text)
+        if emails:
+            print("Email:", emails[0])
+
+        # Extract skills from text
+        skills = extract_skills(text)
+        print("Skills:", skills)
+
+        # Count words and return a dictionary of word counts
+        word_count_dict = count_words(text)
+        print("Word Count Dictionary:", word_count_dict)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+def select_file():
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
+    file_path = filedialog.askopenfilename(
+        title="Select a PDF or DOCX file",
+        filetypes=[("PDF files", "*.pdf"), ("DOCX files", "*.docx")]
+    )
+    return file_path
 
 if __name__ == '__main__':
-    main()
+    # Use the file selection dialog to get the file path
+    file_path = "C:\\Users\\advk2\\OneDrive\\Documents\\CSTL-LabCoat-\\backend\\ADVAITKHOPADE(RESUME).pdf"
+    if file_path:
+        main(file_path)
+    else:
+        print("No file selected.")
